@@ -1,0 +1,12 @@
+{% extends 'layout.html' %}
+
+{% block title %}Profile Page{% endblock %}
+
+{% block content_title %}Profile Page{% endblock %}
+
+{% block content %}
+    <p>Welcome {{user_name}} to your profile page! Your user id is {{user_id}}.</p>
+    <p>You are logged in as: {{ session['user_id'] }}</p>
+    <!-- Add more profile information or actions here -->
+    <p><a href="{{ url_for('logout') }}">Logout</a></p>
+{% endblock %}
