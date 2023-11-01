@@ -181,6 +181,8 @@ def register():
 
 
 @app.route('/')
+def landing():
+    return render_template('landing.html')
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -351,7 +353,6 @@ def add_listing():
         conn.commit()
         conn.close()
 
-        flash('Listing added successfully!', 'success')
         return redirect(url_for('listings'))
 
     return render_template('add_listing.html')
