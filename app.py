@@ -241,35 +241,6 @@ def profile():
     return render_template('profile.html', first_name=first_name, last_name=last_name, email=email, location=location, profile_image=profile_image, user_listings=user_listings)
 
 
-# @app.route('/profile')
-# def profile():
-#     user_id = session.get('user_id')
-#     if user_id is None:
-#         flash('Please log in to access your profile', 'error')
-#         return redirect(url_for('login'))
-
-#     conn = sqlite3.connect('database.db')
-#     conn.row_factory = sqlite3.Row
-#     cursor = conn.cursor()
-#     cursor.execute("SELECT * FROM User WHERE userID=?", (user_id,))
-#     user = cursor.fetchone()
-#     conn.close()
-
-#     if user is None:
-#         flash('User not found', 'error')
-#         return redirect(url_for('login'))
-
-#     # Extracting user information
-#     first_name = user['firstName']
-#     last_name = user['lastName']
-#     email = user['email']
-#     location = user['location']
-#     profile_image = user['profileImage'] if user['profileImage'] else 'default_profile_image_url'
-
-#     # Add your profile page content here
-#     profile_image = user['profileImage'].split('/')[-1] if user['profileImage'] else None
-
-#     return render_template('profile.html', first_name=first_name, last_name=last_name, email=email, location=location, profile_image=profile_image)
 
 @app.route('/edit-profile', methods=['GET', 'POST'])
 def edit_profile():

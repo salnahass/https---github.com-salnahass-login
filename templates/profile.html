@@ -26,14 +26,16 @@
         </div>
 
         <h3 class="mt-5">Your Listings</h3>
-        <ul class="list-group">
+        <div class="listings-container">
             {% for listing in user_listings %}
-                <li class="list-group-item">
-                    <strong>Title:</strong> {{ listing.title }}
-                    <!-- Add more details about the listing as needed -->
-                </li>
+                <div class="listing-card">
+                    <h4>{{ listing['title'] }}</h4>
+                    <img src="{{ listing['images'] }}" alt="Listing Image" class="listing-image">
+                    <p><strong>Description:</strong> {{ listing['description'] }}</p>
+                    <p><strong>Category:</strong> {{ listing['category'] }}</p>
+                </div>
             {% endfor %}
-        </ul>
+        </div>
     </div>
 {% endblock %}
 
