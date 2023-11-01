@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3
 import os
+import re
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 app = Flask(__name__)
@@ -92,6 +93,48 @@ CREATE TABLE IF NOT EXISTS Category (
 conn.commit()
 conn.close()
 
+def validate_title(title):
+    title = title.strip()  # Trim spaces from start and end
+    
+    if not title:
+        return False, "Title must not be empty."
+    if not (10 <= len(title) <= 100):
+        return False, "Title must be between 10 and 100 characters in length."
+    if re.search(r'[<>&%#]', title):
+        return False, "Title cannot contain special characters."
+    
+    return True, "Title is valid."
+
+def validate_description(description):
+    description = description.strip()  # Trim spaces from start and end
+    
+    if not description:
+        return False, "Description must not be empty."
+    if len(description) < 20:
+        return False, "Description must be at least 20 characters in length."
+    if len(description) > 2000:
+        return False, "Description must not exceed 2000 characters."
+    if re.search(r'[<>&%#]', description):
+        return False, "Description cannot contain special characters."
+    
+    return True, "Description is valid."
+
+
+
+def validate_image_url(url):
+    url = url.strip()  # Trim spaces from start and end
+    
+    # Basic URL validation using regex
+    pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+    if url and not pattern.match(url):
+        return False, "Invalid URL format."
+    
+    # Additional checks can be added to ensure URL doesn't lead to malicious websites
+    
+    return True, "URL is valid."
+
+
+
 @app.route('/registration')
 def index():
     return render_template('register.html')
@@ -122,12 +165,20 @@ def register():
 
     # Insert the new user data into the User table
     cursor.execute("INSERT INTO User (firstName, lastName, email, hashedPassword, location, joinDate, lastLogin) VALUES (?, ?, ?, ?, ?, date('now'), date('now'))", (firstName, lastName, email, password, location))
-
     conn.commit()
+
+    # Fetch the userID of the newly registered user
+    cursor.execute("SELECT userID FROM User WHERE email=?", (email,))
+    user = cursor.fetchone()
+
+    # Log the user in by setting the userID in the session
+    session['user_id'] = user[0]
+
     conn.close()
 
+    flash('Registered successfully. You are now logged in.', 'success')
+    return redirect(url_for('profile'))  # Redirect to profile or another desired page
 
-    return redirect(url_for('profile'))
 
 @app.route('/')
 @app.route('/login', methods=['GET', 'POST'])
@@ -157,8 +208,6 @@ def login():
     return render_template('login.html')
 
 
-
-
 @app.route('/profile')
 def profile():
     user_id = session.get('user_id')
@@ -171,6 +220,11 @@ def profile():
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM User WHERE userID=?", (user_id,))
     user = cursor.fetchone()
+
+    # Fetch the listings created by the logged-in user
+    cursor.execute("SELECT * FROM Listing WHERE userID=?", (user_id,))
+    user_listings = cursor.fetchall()
+
     conn.close()
 
     if user is None:
@@ -184,10 +238,38 @@ def profile():
     location = user['location']
     profile_image = user['profileImage'] if user['profileImage'] else 'default_profile_image_url'
 
-    # Add your profile page content here
-    # profile_image = user['profileImage'].split('/')[-1] if user['profileImage'] else None
+    return render_template('profile.html', first_name=first_name, last_name=last_name, email=email, location=location, profile_image=profile_image, user_listings=user_listings)
 
-    return render_template('profile.html', first_name=first_name, last_name=last_name, email=email, location=location, profile_image=profile_image)
+
+# @app.route('/profile')
+# def profile():
+#     user_id = session.get('user_id')
+#     if user_id is None:
+#         flash('Please log in to access your profile', 'error')
+#         return redirect(url_for('login'))
+
+#     conn = sqlite3.connect('database.db')
+#     conn.row_factory = sqlite3.Row
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT * FROM User WHERE userID=?", (user_id,))
+#     user = cursor.fetchone()
+#     conn.close()
+
+#     if user is None:
+#         flash('User not found', 'error')
+#         return redirect(url_for('login'))
+
+#     # Extracting user information
+#     first_name = user['firstName']
+#     last_name = user['lastName']
+#     email = user['email']
+#     location = user['location']
+#     profile_image = user['profileImage'] if user['profileImage'] else 'default_profile_image_url'
+
+#     # Add your profile page content here
+#     profile_image = user['profileImage'].split('/')[-1] if user['profileImage'] else None
+
+#     return render_template('profile.html', first_name=first_name, last_name=last_name, email=email, location=location, profile_image=profile_image)
 
 @app.route('/edit-profile', methods=['GET', 'POST'])
 def edit_profile():
@@ -203,12 +285,11 @@ def edit_profile():
         # Fetch updated details from the form
         first_name = request.form['first_name']
         last_name = request.form['last_name']
-        email = request.form['email']
         location = request.form['location']
         profile_image = request.files['profile_image']
 
         # Update user details in the database
-        cursor.execute("UPDATE User SET firstName=?, lastName=?, email=?, location=? WHERE userID=?", (first_name, last_name, email, location, user_id))
+        cursor.execute("UPDATE User SET firstName=?, lastName=?, location=? WHERE userID=?", (first_name, last_name, location, user_id))
 
         # Handle profile image upload
         if profile_image:
@@ -257,24 +338,43 @@ def listings():
     return render_template('listings.html', listings=listings)
 
 
+
 @app.route('/listing/<int:listing_id>', methods=['GET', 'POST'])
 def view_listing(listing_id):
     conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row  # Set row factory
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM Listing WHERE listingID=?", (listing_id,))
     listing = cursor.fetchone()
 
-    conn.close()
-
     if not listing:
         abort(404)  # Not found
 
-    if request.method == 'POST':
-        # Handle editing the listing if needed
-        pass
+    # Fetch the user details of the person who created the listing
+    cursor.execute("SELECT * FROM User WHERE userID=?", (listing['userID'],))
+    user = cursor.fetchone()
 
-    return render_template('view_listing.html', listing=listing)
+    conn.close()
+
+    if request.method == 'POST':
+        # Handle sending a message to the listing creator
+        sender_id = session['user_id']
+        receiver_id = user['userID']
+        content = request.form.get('message_content')
+        
+        # Insert the message into the Message table
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO Message (senderID, receiverID, listingID, content, sendDate, isRead) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, 0)", (sender_id, receiver_id, listing_id, content))
+        conn.commit()
+        conn.close()
+
+        flash('Message sent successfully!', 'success')
+        return redirect(url_for('view_listing', listing_id=listing_id))
+
+    return render_template('view_listing.html', listing=listing, user=user)
+
 
 
 @app.route('/send_message', methods=['POST'])
