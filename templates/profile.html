@@ -5,8 +5,26 @@
 {% block content_title %}Profile Page{% endblock %}
 
 {% block content %}
-    <p>Welcome {{user_name}} to your profile page! Your user id is {{user_id}}.</p>
-    <p>You are logged in as: {{ session['user_id'] }}</p>
-    <!-- Add more profile information or actions here -->
-    <p><a href="{{ url_for('logout') }}">Logout</a></p>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-4">
+                {% if profile_image %}
+                    <img src="{{ profile_image }}" alt="Profile Image" class="img-fluid rounded-circle mb-3">
+                {% else %}
+                    <img src="path_to_default_image.jpg" alt="Default Profile Image" class="img-fluid rounded-circle mb-3">
+                {% endif %}
+            </div>
+            <div class="col-md-8">
+                <h2 class="mb-3">{{ first_name }} {{ last_name }}</h2>
+                <ul class="list-unstyled">
+                    <li><strong>Email:</strong> {{ email }}</li>
+                    <li><strong>Location:</strong> {{ location }}</li>
+                </ul>
+                <!-- Add more profile information or actions here -->
+                <a href="{{ url_for('edit_profile') }}" class="btn btn-primary mt-3">Edit Profile</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-danger mt-3">Logout</a>
+            </div>
+        </div>
+    </div>
 {% endblock %}
+

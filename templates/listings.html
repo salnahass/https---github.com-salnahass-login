@@ -1,0 +1,42 @@
+{% extends 'layout.html' %}
+
+{% block title %}Listings{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>All Listings</h2>
+    <ul>
+        {% for listing in listings %}
+        <li>
+            <h3>{{ listing[2] }}</h3> <!-- Title -->
+            <p>{{ listing[3] }}</p> <!-- Description -->
+            <img src="{{ listing[4] }}" alt="{{ listing[2] }}" width="200"> <!-- Image and Title -->
+            <p>Category: {{ listing[5] }}</p> <!-- Category -->
+            <p>Date Posted: {{ listing[6] }}</p> <!-- Date Posted -->
+            <a href="{{ url_for('view_listing', listing_id=listing[0]) }}">View</a> <!-- listingID for URL -->
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Add a New Listing</h2>
+    <form action="{{ url_for('listings') }}" method="post">
+        <div class="form-group">
+            <label for="title">Title:</label>
+            <input type="text" class="form-control" name="title" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea class="form-control" name="description" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="images">Image URL:</label>
+            <input type="text" class="form-control" name="images">
+        </div>
+        <div class="form-group">
+            <label for="category">Category:</label>
+            <input type="text" class="form-control" name="category" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Listing</button>
+    </form>
+</div>
+{% endblock %}

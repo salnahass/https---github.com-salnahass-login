@@ -17,3 +17,9 @@ nav a {
     color: #000; /* Change the color as per your design */
     font-weight: bold; /* Make the text bold if desired */
 }
+/* Style the anchor (link) elements */
+nav a {
+    text-decoration: none;
+    color: #000; /* Change the color as per your design */
+    font-weight: bold; /* Make the text bold if desired */
+}

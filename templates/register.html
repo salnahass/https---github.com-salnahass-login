@@ -2,27 +2,48 @@
 
 {% block title %}Registration Page{% endblock %}
 
-{% block content_title %}Registration Page{% endblock %}
+{% block content_title %}<div class="text-center">Registration Page</div>{% endblock %}
 
 {% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6"> <!-- Adjust the column size as needed -->
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <ul class="alert alert-danger">
+                        {% for message in messages %}
+                            <li>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
 
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul>
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-
-    <form method="POST" action="/register">
-        <label for="username">Username:</label>
-        <input type="text" name="username" required autocomplete="off"><br>
-
-        <label for="password">Password:</label>
-        <input type="password" name="password" required autocomplete="off"><br>
-
-        <input type="submit" value="Register">
-    </form>
-    {% endblock %}
+            <form method="POST" action="/register">
+                <div class="form-group">
+                    <label for="firstName">First Name:</label>
+                    <input type="text" class="form-control" name="firstName" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name:</label>
+                    <input type="text" class="form-control" name="lastName" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" class="form-control" name="email" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" class="form-control" name="password" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="location">Location:</label>
+                    <input type="text" class="form-control" name="location" required autocomplete="off">
+                </div>
+                <div class="text-center">
+                    <input type="submit" class="btn btn-primary" value="Register">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
