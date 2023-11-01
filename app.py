@@ -10,12 +10,17 @@ app.secret_key = 'your_secret_key'  # Change this to a secure random key
 conn = sqlite3.connect('database.db')
 cursor = conn.cursor()
 
-# Create a table for user registration
-# cursor.execute('''CREATE TABLE IF NOT EXISTS users (
-#                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-#                     username TEXT NOT NULL,
-#                     password TEXT NOT NULL
-#                 )''')
+#table for messages
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender_id INTEGER NOT NULL,
+        receiver_id INTEGER NOT NULL,
+        message TEXT NOT NULL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+''')
+
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS User (
     userID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -125,31 +130,6 @@ def register():
     return redirect(url_for('profile'))
 
 @app.route('/')
-# @app.route('/login', methods=['GET', 'POST'])
-# def login():
-#     if request.method == 'POST':
-#         username = request.form['username']
-#         password = request.form['password']
-
-#         if not username or not password:
-#             flash('Username and password are required', 'error')
-#             return redirect(url_for('login'))
-
-#         conn = sqlite3.connect('database.db')
-#         cursor = conn.cursor()
-#         cursor.execute("SELECT * FROM users WHERE username=?", (username,))
-#         user = cursor.fetchone()
-#         conn.close()
-
-#         if user is None or user[2] != password:
-#             flash('Invalid username or password', 'error')
-#         else:
-#             session['user_id'] = user[0]
-#             flash('Login successful', 'success')
-#             return redirect(url_for('profile'))
-
-#     return render_template('login.html')
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -297,7 +277,44 @@ def view_listing(listing_id):
     return render_template('view_listing.html', listing=listing)
 
 
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    sender_id = session.get('user_id')
+    receiver_id = request.form['receiver_id']
+    message = request.form['message']
 
+    if not sender_id:
+        flash('Please log in to send messages', 'error')
+        return redirect(url_for('login'))
+
+    if not receiver_id or not message:
+        flash('Receiver and message are required', 'error')
+        return redirect(url_for('profile'))
+
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)", (sender_id, receiver_id, message))
+    conn.commit()
+    conn.close()
+
+    flash('Message sent successfully', 'success')
+    return redirect(url_for('profile'))
+
+@app.route('/get_messages/<int:other_user_id>')
+def get_messages(other_user_id):
+    user_id = session.get('user_id')
+
+    if not user_id:
+        flash('Please log in to view messages', 'error')
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM messages WHERE (sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?) ORDER BY timestamp ASC", (user_id, other_user_id, other_user_id, user_id))
+    messages = cursor.fetchall()
+    conn.close()
+
+    return render_template('messages.html', messages=messages)  # We'll create this template next
 
 
 @app.route('/logout')

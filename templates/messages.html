@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="chat-area">
+    {% for msg in messages %}
+    <div class="message">
+        <strong>{{ msg.sender_id }}</strong>: {{ msg.message }}
+    </div>
+    {% endfor %}
+</div>
+<form action="{{ url_for('send_message') }}" method="post">
+    <input type="hidden" name="receiver_id" value="{{ other_user_id }}">
+    <textarea name="message" placeholder="Type your message..."></textarea>
+    <button type="submit">Send</button>
+</form>
+{% endblock %}

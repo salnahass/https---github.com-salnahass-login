@@ -23,3 +23,15 @@ nav a {
     color: #000; /* Change the color as per your design */
     font-weight: bold; /* Make the text bold if desired */
 }
+
+.chat-area {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.message {
+    margin-bottom: 10px;
+}
