@@ -1,0 +1,27 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container">
+        <h2 class="mt-5">Add a New Listing</h2>
+        <form action="{{ url_for('add_listing') }}" method="post">
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" class="form-control" name="title" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea class="form-control" name="description" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="images">Image URL: </label>
+                <input type="text" class="form-control" name="images">
+            </div>
+            <div class="form-group">
+                <label for="category">Category:</label>
+                <input type="text" class="form-control" name="category" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Listing</button>
+        </form>        
+    </form>
+</div>
+{% endblock %}

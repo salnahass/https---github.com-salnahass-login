@@ -53,3 +53,37 @@ nav a {
     height: auto;
 }
 
+.listings-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Spacing between listings */
+}
+
+.listing-item {
+    display: flex;
+    gap: 15px; /* Spacing between image and details */
+    align-items: center; /* Align items vertically centered */
+    border: 1px solid #e0e0e0;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.listing-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.listing-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.listing-category {
+    background-color: #f0f0f0;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+

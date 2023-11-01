@@ -284,29 +284,15 @@ def edit_profile():
 
     return render_template('edit_profile.html', user=user)
 
-@app.route('/listings', methods=['GET', 'POST'])
+@app.route('/listings', methods=['GET'])
 def listings():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-
-    if request.method == 'POST':
-        title = request.form.get('title')
-        description = request.form.get('description')
-        images = request.form.get('images')
-        category = request.form.get('category')
-        userID = session['user_id']
-
-        cursor.execute("INSERT INTO Listing (userID, title, description, images, category, datePosted, status) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, 'available')", (userID, title, description, images, category))
-        conn.commit()
-
-        flash('Listing added successfully!', 'success')
-        return redirect(url_for('listings'))
-
     cursor.execute("SELECT * FROM Listing")
     listings = cursor.fetchall()
-
     conn.close()
     return render_template('listings.html', listings=listings)
+
 
 
 
@@ -345,6 +331,31 @@ def view_listing(listing_id):
         return redirect(url_for('view_listing', listing_id=listing_id))
 
     return render_template('view_listing.html', listing=listing, user=user)
+
+@app.route('/create_listing')
+def create_listing():
+    return render_template('create_listing.html')
+
+@app.route('/add_listing', methods=['GET', 'POST'])
+def add_listing():
+    if request.method == 'POST':
+        title = request.form.get('title')
+        description = request.form.get('description')
+        images = request.form.get('images')
+        category = request.form.get('category')
+        userID = session['user_id']
+
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO Listing (userID, title, description, images, category, datePosted, status) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, 'available')", (userID, title, description, images, category))
+        conn.commit()
+        conn.close()
+
+        flash('Listing added successfully!', 'success')
+        return redirect(url_for('listings'))
+
+    return render_template('add_listing.html')
+
 
 
 

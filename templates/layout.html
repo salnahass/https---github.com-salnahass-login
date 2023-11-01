@@ -28,8 +28,10 @@
 
                 </li>
                 <li class="nav-item">
-                    <!-- <a class="nav-link" href="listings">Listings</a> -->
                     <a href="{{ url_for('listings') }}">Listing</a>                
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('add_listing') }}">Add Listing</a>
                 </li>
                 <li class="nav-item">
                     <a href="{{ url_for('get_messages', other_user_id=2) }}">Messages</a> <!-- You can dynamically set the other_user_id based on the user you want to chat with -->

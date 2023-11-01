@@ -26,13 +26,17 @@
         </div>
 
         <h3 class="mt-5">Your Listings</h3>
-        <div class="listings-container">
+        <div class="listings-container d-flex flex-row flex-wrap justify-content-start">
             {% for listing in user_listings %}
-                <div class="listing-card">
-                    <h4>{{ listing['title'] }}</h4>
-                    <img src="{{ listing['images'] }}" alt="Listing Image" class="listing-image">
-                    <p><strong>Description:</strong> {{ listing['description'] }}</p>
-                    <p><strong>Category:</strong> {{ listing['category'] }}</p>
+                <div class="listing-card mb-4 mr-4">
+                    <div class="card" style="width: 11rem;">
+                        <img src="{{ listing['images'] }}" alt="Listing Image" class="card-img-top">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ listing['title'] }}</h5>
+                            <p class="card-text">{{ listing['description'] }}</p>
+                            <p class="card-text"><small class="text-muted">Category: {{ listing['category'] }}</small></p>
+                        </div>
+                    </div>
                 </div>
             {% endfor %}
         </div>
