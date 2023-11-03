@@ -163,16 +163,27 @@ def index():
 
 @app.route('/register', methods=['POST'])
 def register():
-    firstName = request.form['firstName']
-    lastName = request.form['lastName']
-    email = request.form['email']
-    password = request.form['password']
-    location = request.form['location']
+    if request.method == 'POST':
+        firstName = request.form['firstName']
+        lastName = request.form['lastName']
+        email = request.form['email']
+        password = request.form['password']
+        location = request.form['location']
+        profile_image = request.files['profileImage']
 
-    # Check if all required fields are filled
-    if not firstName or not lastName or not email or not password or not location:
-        flash('All fields are required', 'error')
-        return redirect(url_for('index'))
+        # Check if all required fields are filled
+        if not firstName or not lastName or not email or not password or not location:
+            flash('All fields are required', 'error')
+            return redirect(url_for('register'))
+
+        # Check if the file is one of the allowed types/extensions
+        if profile_image and allowed_file(profile_image.filename):
+            filename = secure_filename(profile_image.filename)
+            profile_image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            profile_image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        else:
+            flash('Invalid image format', 'error')
+            return redirect(url_for('register'))
 
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
@@ -186,8 +197,9 @@ def register():
         return redirect(url_for('index'))
 
     # Insert the new user data into the User table
-    cursor.execute("INSERT INTO User (firstName, lastName, email, hashedPassword, location, joinDate, lastLogin) VALUES (?, ?, ?, ?, ?, date('now'), date('now'))", (firstName, lastName, email, password, location))
+    cursor.execute("INSERT INTO User (firstName, lastName, email, hashedPassword, profileImage, location, joinDate, lastLogin) VALUES (?, ?, ?, ?, ?, ?, date('now'), date('now'))", (firstName, lastName, email, password, profile_image_path, location))
     conn.commit()
+    
 
     # Fetch the userID of the newly registered user
     cursor.execute("SELECT userID FROM User WHERE email=?", (email,))

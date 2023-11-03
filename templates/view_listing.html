@@ -3,18 +3,32 @@
 {% block title %}View Listing{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2>{{ listing.title }}</h2>
-    <p>{{ listing.description }}</p>
-    <img src="{{ listing.images }}" alt="{{ listing.title }}" width="200">
-    <p>Category: {{ listing.category }}</p>
-    <p>Date Posted: {{ listing.datePosted }}</p>
-    <p>Posted by: {{ user.firstName }} {{ user.lastName }}</p>
-
-    <h3>Send a message to the listing creator:</h3>
-    <form action="{{ url_for('view_listing', listing_id=listing.listingID) }}" method="post">
-        <textarea name="message_content" required placeholder="Type your message here..."></textarea>
-        <button type="submit">Send Message</button>
-    </form>
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8">
+            <img src="{{ listing.images }}" alt="{{ listing.title }}" class="img-fluid">
+        </div>
+        <div class="col-md-4">
+            <h2 class="mb-3">{{ listing.title }}</h2>
+            <p>{{ listing.description }}</p>
+            <ul class="list-group mb-3">
+                <li class="list-group-item">Category: {{ listing.category }}</li>
+                <li class="list-group-item">Date Posted: {{ listing.datePosted }}</li>
+                <li class="list-group-item">Posted by: {{ user.firstName }} {{ user.lastName }}</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-body">
+            <h3 class="card-title">Send a message to the listing creator:</h3>
+            <form action="{{ url_for('view_listing', listing_id=listing.listingID) }}" method="post">
+                <div class="form-group">
+                    <textarea class="form-control" name="message_content" rows="3" required placeholder="Type your message here..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Send Message</button>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

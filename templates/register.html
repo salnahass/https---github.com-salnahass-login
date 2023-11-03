@@ -18,7 +18,7 @@
                 {% endif %}
             {% endwith %}
 
-            <form method="POST" action="/register">
+            <form method="POST" action="/register" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="firstName">First Name:</label>
                     <input type="text" class="form-control" name="firstName" required autocomplete="off">
@@ -38,6 +38,10 @@
                 <div class="form-group">
                     <label for="location">Location:</label>
                     <input type="text" class="form-control" name="location" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="profileImage">Profile Image:</label>
+                    <input type="file" class="form-control-file" name="profileImage" accept="image/*">
                 </div>
                 <div class="text-center">
                     <input type="submit" class="btn btn-primary" value="Register">
