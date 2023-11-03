@@ -1,11 +1,30 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from werkzeug.utils import secure_filename
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
 import sqlite3
 import os
 import re
 
-UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
+
+
+# UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Change this to a secure random key
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'uploads')
+# Define the upload folder path
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# Ensure the UPLOAD_FOLDER exists
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+# Allowed extensions for file upload
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Ensure the UPLOAD_FOLDER directory exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Create a SQLite database connection
 conn = sqlite3.connect('database.db')
@@ -134,6 +153,9 @@ def validate_image_url(url):
     return True, "URL is valid."
 
 
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/registration')
 def index():
@@ -343,13 +365,22 @@ def add_listing():
     if request.method == 'POST':
         title = request.form.get('title')
         description = request.form.get('description')
-        images = request.form.get('images')
         category = request.form.get('category')
         userID = session['user_id']
+        image = request.files['image']
+
+        # Validate and save the image if it exists
+        if image and allowed_file(image.filename):
+            filename = secure_filename(image.filename)
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image.save(image_path)
+            image_url = url_for('uploaded_file', filename=filename)
+        else:
+            image_url = ''  # or a default image URL if you prefer
 
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO Listing (userID, title, description, images, category, datePosted, status) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, 'available')", (userID, title, description, images, category))
+        cursor.execute("INSERT INTO Listing (userID, title, description, images, category, datePosted, status) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, 'available')", (userID, title, description, image_url, category))
         conn.commit()
         conn.close()
 
@@ -357,6 +388,9 @@ def add_listing():
 
     return render_template('add_listing.html')
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
 
 
 
