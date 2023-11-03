@@ -11,7 +11,7 @@
                     <img src="{{ url_for('uploaded_file', filename=profile_image) }}" alt="Profile Image" class="img-fluid rounded-circle mb-3">
                 {% else %}
                     <!-- Provide the correct path to your default image -->
-                    <img src="{{ url_for('static', filename='path_to_default_image.jpg') }}" alt="Default Profile Image" class="img-fluid rounded-circle mb-3">
+                    <img src="{{ url_for('static', filename='uploads/defaultpfp.jpg') }}" alt="Default Profile Image" class="img-fluid rounded-circle mb-3">
                 {% endif %}
             </div>
             <div class="col-md-8">

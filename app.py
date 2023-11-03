@@ -272,7 +272,7 @@ def profile():
     last_name = user['lastName']
     email = user['email']
     location = user['location']
-    profile_image = user['profileImage'] if user['profileImage'] else 'default_profile_image_url'
+    profile_image = user['profileImage'] if user['profileImage'] else 'uploads/defaultpfp.jpg'
 
     return render_template('profile.html', first_name=first_name, last_name=last_name, email=email, location=location, profile_image=profile_image, user_listings=user_listings)
 
