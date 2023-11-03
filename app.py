@@ -1,10 +1,12 @@
 from werkzeug.utils import secure_filename
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
+from PIL import Image
 import sqlite3
 import os
 import re
 
-
+# Define the maximum file size (5MB)
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB in bytes
 
 # UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 app = Flask(__name__)
@@ -13,6 +15,8 @@ app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'uploads')
 # Define the upload folder path
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE  # Flask will automatically return a 413 response if file is too large
+
 # Ensure the UPLOAD_FOLDER exists
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -363,35 +367,50 @@ def create_listing():
 @app.route('/add_listing', methods=['GET', 'POST'])
 def add_listing():
     if request.method == 'POST':
-        title = request.form.get('title')
-        description = request.form.get('description')
-        category = request.form.get('category')
-        userID = session['user_id']
-        image = request.files['image']
+        # Check if the post request has the file part
+        if 'image' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['image']
+        
+        # If the user does not select a file, the browser submits an
+        # empty file without a filename.
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        
+        if file and allowed_file(file.filename):
+            # Check if the image is valid
+            try:
+                img = Image.open(file)
+                img.verify()  # Verify that it is, indeed, an image
+            except (IOError, SyntaxError) as e:
+                flash('Invalid image file')
+                return redirect(request.url)
+            
+            # Check file size
+            file.seek(0, os.SEEK_END)
+            file_length = file.tell()
+            if file_length > MAX_FILE_SIZE:
+                flash('File is too large (max 5MB)')
+                return redirect(request.url)
+            
+            # If all checks pass, proceed to save the file
+            filename = secure_filename(file.filename)
+            file.seek(0)  # Seek back to the beginning of the file
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            
+            # Now you can store the file_path in your database along with other listing details
+            # ...
 
-        # Validate and save the image if it exists
-        if image and allowed_file(image.filename):
-            filename = secure_filename(image.filename)
-            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            image.save(image_path)
-            image_url = url_for('uploaded_file', filename=filename)
+            flash('Listing created successfully!')
+            return redirect(url_for('listings'))
         else:
-            image_url = ''  # or a default image URL if you prefer
-
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO Listing (userID, title, description, images, category, datePosted, status) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, 'available')", (userID, title, description, image_url, category))
-        conn.commit()
-        conn.close()
-
-        return redirect(url_for('listings'))
-
+            flash('Allowed file types are png, jpg, jpeg, gif')
+            return redirect(request.url)
+    # If it's a GET request, just render the form
     return render_template('add_listing.html')
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
-
 
 
 @app.route('/send_message', methods=['POST'])
