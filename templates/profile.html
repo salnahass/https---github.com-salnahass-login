@@ -9,6 +9,7 @@
                 {% if profile_image %}
                     <!-- Ensure the src points to the uploaded_file route -->
                     <img src="{{ url_for('uploaded_file', filename=profile_image) }}" alt="Profile Image" class="img-fluid rounded-circle mb-3">
+                    
                 {% else %}
                     <!-- Provide the correct path to your default image -->
                     <img src="{{ url_for('static', filename='uploads/defaultpfp.jpg') }}" alt="Default Profile Image" class="img-fluid rounded-circle mb-3">
@@ -31,7 +32,7 @@
                 <div class="listing-card mb-4 mr-4">
                     <div class="card">
                         {% if listing['images'] %}
-                            <img src="{{ url_for('uploaded_file', filename=listing['images']) }}" alt="Listing Image" class="card-img-top">
+                            <img src="{{ listing['images'] }}" alt="{{ listing['title'] }}" class="card-img-top">
                         {% else %}
                             <img src="{{ url_for('static', filename='path_to_default_listing_image.jpg') }}" alt="Default Listing Image" class="card-img-top">
                         {% endif %}
