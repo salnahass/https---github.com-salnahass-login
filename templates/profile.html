@@ -29,7 +29,7 @@
         <div class="listings-container d-flex flex-row flex-wrap justify-content-start">
             {% for listing in user_listings %}
                 <div class="listing-card mb-4 mr-4">
-                    <div class="card" style="width: 18rem;">
+                    <div class="card">
                         {% if listing['images'] %}
                             <img src="{{ url_for('uploaded_file', filename=listing['images']) }}" alt="Listing Image" class="card-img-top">
                         {% else %}
