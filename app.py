@@ -250,6 +250,8 @@ def profile():
     if user_id is None:
         flash('Please log in to access your profile', 'error')
         return redirect(url_for('login'))
+    # retrieve user id from previous page
+    userid = request.args.get('user_id')
 
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
@@ -258,10 +260,10 @@ def profile():
     user = cursor.fetchone()
 
     # Fetch the listings created by the logged-in user
-    cursor.execute("SELECT * FROM Listing WHERE userID=?", (user_id,))
+    cursor.execute("SELECT * FROM Listing WHERE userID=?", (userid,))
     user_listings = cursor.fetchall()
 
-    conn.close()
+    # conn.close()
 
     if user is None:
         flash('User not found', 'error')
@@ -274,9 +276,11 @@ def profile():
     location = user['location']
     profile_image = user['profileImage'] if user['profileImage'] else 'uploads/defaultpfp.jpg'
 
-    return render_template('profile.html', first_name=first_name, last_name=last_name, email=email, location=location, profile_image=profile_image, user_listings=user_listings)
+# Fetch the reviews for the user
+    cursor.execute("SELECT * FROM Review WHERE reviewedUserID=?", (user_id,))
+    user_reviews = cursor.fetchall()
 
-
+    return render_template('profile.html', first_name=first_name, last_name=last_name, email=email, location=location, profile_image=profile_image, user_listings=user_listings, user_reviews=user_reviews)
 
 @app.route('/edit-profile', methods=['GET', 'POST'])
 def edit_profile():
@@ -320,6 +324,126 @@ def edit_profile():
 
     return render_template('edit_profile.html', user=user)
 
+@app.route('/submit_review')
+def submit_review_form():
+    # Ensure the user is logged in
+    if 'user_id' not in session:
+        flash('Please log in to submit a review.', 'error')
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT userID, firstName, lastName FROM User WHERE userID != ?", (session['user_id'],))
+    users = cursor.fetchall()
+    conn.close()
+    for u in users:
+        print (u)
+    return render_template('submit_review.html', users=users)
+
+@app.route('/submit_review', methods=['POST'])
+def submit_review():
+    reviewer_id = session.get('user_id')
+    reviewed_user_id = request.form.get('reviewed_user_id')
+    rating = request.form.get('rating')
+    comment = request.form.get('comment')
+
+    if not reviewer_id:
+        flash('You must be logged in to submit a review.', 'error')
+        return redirect(url_for('login'))
+
+    if reviewer_id == reviewed_user_id:
+        flash('You cannot review yourself.', 'error')
+        return redirect(url_for('user_reviews', user_id=reviewed_user_id))
+
+    try:
+        rating = int(rating)
+        if rating < 1 or rating > 5:
+            flash('Rating must be between 1 and 5.', 'error')
+            return redirect(url_for('user_reviews', user_id=reviewed_user_id))
+    except ValueError:
+        flash('Invalid rating.', 'error')
+        return redirect(url_for('user_reviews', user_id=reviewed_user_id))
+
+    try:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO Review (reviewerID, reviewedUserID, rating, comment, datePosted)
+            VALUES (?, ?, ?, ?, date('now'))
+        ''', (reviewer_id, reviewed_user_id, rating, comment))
+        conn.commit()
+    except sqlite3.IntegrityError as e:
+        flash('An error occurred while submitting the review: ' + str(e), 'error')
+        return redirect(url_for('user_reviews', user_id=reviewed_user_id))
+    finally:
+        conn.close()
+
+    flash('Your review has been submitted.', 'success')
+    return redirect(url_for('user_reviews', user_id=reviewed_user_id))
+
+
+@app.route('/user_reviews/<int:user_id>')
+def user_reviews(user_id):
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT r.*, u.firstName, u.lastName FROM Review r
+        JOIN User u ON r.reviewerID = u.userID
+        WHERE r.reviewedUserID = ?
+    """, (user_id,))
+
+    reviews = cursor.fetchall()
+    conn.close()
+
+    return render_template('user_reviews.html', reviews=reviews)
+
+@app.route('/users')
+def users():
+    # Ensure the user is logged in before they can see the list of users
+    if 'user_id' not in session:
+        flash('Please log in to view registered users', 'error')
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    # Select all users except the one who's currently logged in
+    current_user_id = session['user_id']
+    cursor.execute("SELECT * FROM User WHERE userID != ?", (current_user_id,))
+    registered_users = cursor.fetchall()
+    conn.close()
+    print (registered_users)
+    return render_template('users.html', users=registered_users)
+
+@app.route('/user_profile/<int:user_id>')
+def user_profile(user_id):
+    # Create a database connection
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row  # This allows us to access the columns by name
+    cursor = conn.cursor()
+
+    # Fetch the user's profile using the user_id
+    cursor.execute("SELECT * FROM User WHERE userID = ?", (user_id,))
+    user = cursor.fetchone()
+
+    # Close the database connection
+    conn.close()
+
+    # Check if the user was found
+    if user is None:
+        # User was not found, redirect or show an error
+        flash('User not found', 'error')
+        return redirect(url_for('index'))  # Redirect to the home page or a 404 page
+
+    # If the user was found, render the user_profile.html template with the user data
+    return render_template('user_profile.html', profile=user)
+
+# Make sure to create a user_profile.html template that expects a 'profile' variable
+
+
 @app.route('/listings', methods=['GET'])
 def listings():
     conn = sqlite3.connect('database.db')
@@ -328,8 +452,6 @@ def listings():
     listings = cursor.fetchall()
     conn.close()
     return render_template('listings.html', listings=listings)
-
-
 
 
 @app.route('/listing/<int:listing_id>', methods=['GET', 'POST'])

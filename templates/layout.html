@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>{% block title %}My Website{% endblock %}</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-
-</head>
+    <head>
+        <title>{% block title %}My Website{% endblock %}</title>
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+    </head>
+    
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand" href="#">Exchange Hub</a>
@@ -38,6 +38,12 @@
                 <li class="nav-item">
                     <a href="{{ url_for('get_messages', other_user_id=2) }}">Messages</a> <!-- You can dynamically set the other_user_id based on the user you want to chat with -->
                 </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('submit_review', user_id=session['user_id']) }}">Reviews</a> 
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('users') }}">All Profiles</a> 
+                </li>                   
             </ul>
         </div>
     </nav>

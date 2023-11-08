@@ -1,0 +1,10 @@
+<!-- user_profile.html -->
+{% extends 'layout.html' %}
+
+{% block content %}
+    <h1>{{ profile.firstName }} {{ profile.lastName }}</h1>
+    <!-- Display other user information -->
+    <p>Email: {{ profile.email }}</p>
+    <p>Location: {{ profile.location }}</p>
+    <!-- Add more fields as needed -->
+{% endblock %}

@@ -1,0 +1,28 @@
+<!-- users.html -->
+{% extends 'layout.html' %}
+
+{% block content %}
+    <h2>Registered Users</h2>
+    <div class="users-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Location</th>
+                    <th>Profile</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.firstName }} {{ user.lastName }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.location }}</td>
+                        <td><a href="{{ url_for('user_profile', user_id=user.userID) }}">View Profile</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

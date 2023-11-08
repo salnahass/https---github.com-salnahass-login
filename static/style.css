@@ -87,3 +87,30 @@ nav a {
     border-radius: 5px;
 }
 
+.review {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.review strong {
+    display: block;
+    color: #333;
+}
+
+.review p {
+    margin: 5px 0;
+}
+
+.checked {
+    color: orange;
+}
+
+.review {
+    background-color: #f8f9fa;
+}
+
+.review-rating {
+    margin-bottom: 5px;
+}
+
