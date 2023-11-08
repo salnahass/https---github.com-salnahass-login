@@ -412,6 +412,7 @@ def users():
 
     # Select all users except the one who's currently logged in
     current_user_id = session['user_id']
+    print (current_user_id)
     cursor.execute("SELECT * FROM User WHERE userID != ?", (current_user_id,))
     registered_users = cursor.fetchall()
     conn.close()
@@ -420,6 +421,9 @@ def users():
 
 @app.route('/user_profile/<int:user_id>')
 def user_profile(user_id):
+
+    # userid = request.args.get('user_id')
+
     # Create a database connection
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row  # This allows us to access the columns by name
@@ -428,9 +432,8 @@ def user_profile(user_id):
     # Fetch the user's profile using the user_id
     cursor.execute("SELECT * FROM User WHERE userID = ?", (user_id,))
     user = cursor.fetchone()
-
     # Close the database connection
-    conn.close()
+    # conn.close()
 
     # Check if the user was found
     if user is None:
@@ -438,8 +441,15 @@ def user_profile(user_id):
         flash('User not found', 'error')
         return redirect(url_for('index'))  # Redirect to the home page or a 404 page
 
+    # Fetch the reviews for the user
+    cursor.execute("SELECT * FROM Review WHERE reviewedUserID = ?", (user_id,))
+    user_reviews = cursor.fetchall()
+    print (user_id)
+    print (user_reviews)
+
+
     # If the user was found, render the user_profile.html template with the user data
-    return render_template('user_profile.html', profile=user)
+    return render_template('user_profile.html', profile=user, user_reviews = user_reviews)
 
 # Make sure to create a user_profile.html template that expects a 'profile' variable
 

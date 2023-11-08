@@ -7,4 +7,31 @@
     <p>Email: {{ profile.email }}</p>
     <p>Location: {{ profile.location }}</p>
     <!-- Add more fields as needed -->
+    <!-- User Reviews -->
+    <h3 class="mt-5">Reviews</h3>
+    <div class="reviews-container">
+        {% if user_reviews %}
+            {% for review in user_reviews %}
+                <div class="review mb-3 p-3 border rounded">
+                    <div class="review-rating">
+                        {% for star in range(review.rating) %}
+                            <span class="fa fa-star checked"></span>
+                        {% endfor %}
+                        {% for star in range(5 - review.rating) %}
+                            <span class="fa fa-star"></span>
+                        {% endfor %}
+                    </div>
+                    <div class="review-text">
+                        <p>{{ review.comment }}</p>
+                    </div>
+                    <div class="review-date">
+                        <small class="text-muted">{{ review.datePosted }}</small>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No reviews yet.</p>
+        {% endif %}
+    </div>
+
 {% endblock %}
