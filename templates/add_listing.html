@@ -2,26 +2,33 @@
 
 {% block content %}
 <div class="container">
-        <h2 class="mt-5">Add a New Listing</h2>
-        <form action="{{ url_for('add_listing') }}" method="post" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="title">Title:</label>
-                <input type="text" class="form-control" name="title" required>
-            </div>
-            <div class="form-group">
-                <label for="description">Description:</label>
-                <textarea class="form-control" name="description" required></textarea>
-            </div>
-            <div class="form-group">
-                <label for="images">Image:</label>
-                <input type="file" class="form-control" name="image" accept="image/*">
-            </div>
-            <div class="form-group">
-                <label for="category">Category:</label>
-                <input type="text" class="form-control" name="category" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Add Listing</button>
-        </form>        
-    </form>
+    <h2 class="mt-5">Add a New Listing</h2>
+    <form action="{{ url_for('add_listing') }}" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="title">Title:</label>
+            <input type="text" class="form-control" name="title" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea class="form-control" name="description" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="images">Image:</label>
+            <input type="file" class="form-control" name="image" accept="image/*">
+        </div>
+        <div class="form-group">
+            <label for="category">Category:</label>
+            <select class="form-control" name="category" required>
+                <option value="">Select a category</option>
+                <option value="electronics">Electronics</option>
+                <option value="furniture">Furniture</option>
+                <option value="clothing">Clothing</option>
+                <option value="books">Books</option>
+                <option value="sports">Sports Equipment</option>
+                <!-- Add more categories as needed -->
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Listing</button>
+    </form>        
 </div>
 {% endblock %}
