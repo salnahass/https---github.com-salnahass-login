@@ -157,11 +157,12 @@ def validate_image_url(url):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+
 @app.route('/registration')
 def index():
     return render_template('register.html')
 
-@app.route('/register', methods=['POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         firstName = request.form['firstName']
@@ -177,16 +178,28 @@ def register():
             return redirect(url_for('register'))
 
         # Check if the file is one of the allowed types/extensions
+    #     if profile_image and allowed_file(profile_image.filename):
+    #         filename = secure_filename(profile_image.filename)
+    #         profile_image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    #         profile_image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    #     else:
+    #         flash('Invalid image format', 'error')
+    #         return redirect(url_for('register'))
+        
+
+    # conn = sqlite3.connect('database.db')
+    # cursor = conn.cursor()
         if profile_image and allowed_file(profile_image.filename):
             filename = secure_filename(profile_image.filename)
-            profile_image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            profile_image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            profile_image.save(image_path)
+            image_url = url_for('uploaded_file', filename=filename)
         else:
-            flash('Invalid image format', 'error')
-            return redirect(url_for('register'))
+            image_url = ''  # or a default image URL if you prefer
 
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        conn.commit()
 
     # Check if email already exists
     cursor.execute("SELECT * FROM User WHERE email=?", (email,))
@@ -197,7 +210,7 @@ def register():
         return redirect(url_for('index'))
 
     # Insert the new user data into the User table
-    cursor.execute("INSERT INTO User (firstName, lastName, email, hashedPassword, profileImage, location, joinDate, lastLogin) VALUES (?, ?, ?, ?, ?, ?, date('now'), date('now'))", (firstName, lastName, email, password, profile_image_path, location))
+    cursor.execute("INSERT INTO User (firstName, lastName, email, hashedPassword, profileImage, location, joinDate, lastLogin) VALUES (?, ?, ?, ?, ?, ?, date('now'), date('now'))", (firstName, lastName, email, password, image_url, location))
     conn.commit()
     
 
@@ -561,22 +574,42 @@ def send_message():
     flash('Message sent successfully', 'success')
     return redirect(url_for('profile'))
 
-@app.route('/get_messages/<int:other_user_id>')
-def get_messages(other_user_id):
+# @app.route('/get_messages/<int:other_user_id>')
+# def get_messages(other_user_id):
+#     user_id = session.get('user_id')
+
+#     if not user_id:
+#         return redirect(url_for('login'))
+
+#     conn = sqlite3.connect('database.db')
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT * FROM messages WHERE (sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?) ORDER BY timestamp ASC", (user_id, other_user_id, other_user_id, user_id))
+#     messages = cursor.fetchall()
+#     conn.close()
+
+#     return render_template('messages.html', messages=messages)  
+@app.route('/get_messages')
+def get_messages():
     user_id = session.get('user_id')
 
     if not user_id:
-        flash('Please log in to view messages', 'error')
         return redirect(url_for('login'))
 
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM messages WHERE (sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?) ORDER BY timestamp ASC", (user_id, other_user_id, other_user_id, user_id))
-    messages = cursor.fetchall()
+
+    # Replace 'id' and 'name' with your actual column names
+    cursor.execute("SELECT user_id, username FROM User WHERE user_id != ?", (user_id,))
+    users = cursor.fetchall()
+
+    messages = []
+    other_user_id = request.args.get('other_user_id')
+    if other_user_id:
+        cursor.execute("SELECT * FROM messages WHERE (sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?) ORDER BY timestamp ASC", (user_id, other_user_id, other_user_id, user_id))
+        messages = cursor.fetchall()
+
     conn.close()
-
-    return render_template('messages.html', messages=messages)  # We'll create this template next
-
+    return render_template('messages.html', users=users, messages=messages, other_user_id=other_user_id)
 
 @app.route('/logout')
 def logout():
