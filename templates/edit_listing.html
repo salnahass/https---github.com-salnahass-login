@@ -1,0 +1,37 @@
+{% extends 'layout.html' %}
+
+{% block title %}Edit Listing{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Edit Listing</h2>
+    <form method="POST" action="{{ url_for('edit_listing', listing_id=listing.listingID) }}" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ listing.title }}" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="3" required>{{ listing.description }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="images">Image:</label>
+            <input type="file" class="form-control" name="image" accept="image/*">
+        </div>
+        <div class="form-group">
+            <label for="category">Category:</label>
+            <select class="form-control" name="category" required>
+                <option value="">Select a category</option>
+                <option value="electronics">Electronics</option>
+                <option value="furniture">Furniture</option>
+                <option value="clothing">Clothing</option>
+                <option value="books">Books</option>
+                <option value="sports">Sports Equipment</option>
+                <!-- Add more categories as needed -->
+            </select>
+        </div>
+        <!-- Include other fields as necessary -->
+        <button type="submit" class="btn btn-primary">Update Listing</button>
+    </form>
+</div>
+{% endblock %}

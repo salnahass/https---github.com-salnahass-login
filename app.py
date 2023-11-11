@@ -542,6 +542,62 @@ def add_listing():
 
     return render_template('add_listing.html')
 
+@app.route('/edit-listing/<int:listing_id>', methods=['GET', 'POST'])
+def edit_listing(listing_id):
+    conn = sqlite3.connect('database.db')
+    cur = conn.cursor()
+
+    if request.method == 'POST':
+        # Retrieve form data
+        title = request.form.get('title')
+        description = request.form.get('description')
+        image = request.files['image']        
+        category = request.form.get('category')
+        # ... other fields as necessary ...
+        if image and allowed_file(image.filename):
+            filename = secure_filename(image.filename)
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image.save(image_path)
+            image_url = url_for('uploaded_file', filename=filename)
+        else:
+            image_url = ''  # or a default image URL if you prefer
+
+        # Update the listing in the database
+        cur.execute("UPDATE Listing SET title=?, description=?, images=?, category=? WHERE listingID=?", 
+                    (title, description, image_url, category, listing_id))
+        conn.commit()
+
+        # Redirect to the profile page after update
+        return redirect(url_for('profile'))
+
+    else:
+        # Retrieve the listing details for editing
+        cur.execute("SELECT * FROM Listing WHERE listingID=?", (listing_id,))
+        row = cur.fetchone()
+
+        if row:
+            # Convert the tuple to a dictionary
+            columns = [column[0] for column in cur.description]
+            listing = dict(zip(columns, row))
+        else:
+            listing = None
+
+        conn.close()
+
+        # Render the edit listing form with the current details
+    return render_template('edit_listing.html', listing=listing)
+
+@app.route('/delete-listing/<int:listing_id>')
+def delete_listing(listing_id):
+    # Delete the listing from the database
+    conn = sqlite3.connect('database.db')
+    cur = conn.cursor()
+    cur.execute("DELETE FROM Listing WHERE listingID=?", (listing_id,))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('profile'))
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
