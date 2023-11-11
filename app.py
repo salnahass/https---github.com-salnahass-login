@@ -1,5 +1,6 @@
 from werkzeug.utils import secure_filename
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
+from datetime import datetime
 import sqlite3
 import os
 import re
@@ -30,16 +31,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 conn = sqlite3.connect('database.db')
 cursor = conn.cursor()
 
-#table for messages
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        sender_id INTEGER NOT NULL,
-        receiver_id INTEGER NOT NULL,
-        message TEXT NOT NULL,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-''')
+
 
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS User (
@@ -273,8 +265,9 @@ def profile():
     user = cursor.fetchone()
 
     # Fetch the listings created by the logged-in user
-    cursor.execute("SELECT * FROM Listing WHERE userID=?", (userid,))
+    cursor.execute("SELECT * FROM Listing WHERE userID=?", (user_id,))
     user_listings = cursor.fetchall()
+    print(user_listings)
 
     # conn.close()
 
@@ -454,6 +447,11 @@ def user_profile(user_id):
         flash('User not found', 'error')
         return redirect(url_for('index'))  # Redirect to the home page or a 404 page
 
+    # Fetch the listings posted by the user
+    cursor.execute("SELECT * FROM Listing WHERE userID = ?", (user_id,))
+    user_listings = cursor.fetchall()
+    print(user_listings)
+
     # Fetch the reviews for the user
     cursor.execute("SELECT * FROM Review WHERE reviewedUserID = ?", (user_id,))
     user_reviews = cursor.fetchall()
@@ -462,9 +460,8 @@ def user_profile(user_id):
 
 
     # If the user was found, render the user_profile.html template with the user data
-    return render_template('user_profile.html', profile=user, user_reviews = user_reviews)
+    return render_template('user_profile.html', profile=user, user_reviews = user_reviews, user_listings=user_listings)
 
-# Make sure to create a user_profile.html template that expects a 'profile' variable
 
 
 @app.route('/listings', methods=['GET'])
@@ -557,6 +554,9 @@ def send_message():
     receiver_id = request.form['receiver_id']
     message = request.form['message']
 
+    # Set listing_id to None or an appropriate default value
+    listing_id = None
+
     if not sender_id:
         flash('Please log in to send messages', 'error')
         return redirect(url_for('login'))
@@ -567,27 +567,15 @@ def send_message():
 
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)", (sender_id, receiver_id, message))
+    cursor.execute("INSERT INTO Message (senderID, receiverID, listingID, content, sendDate, isRead) VALUES (?, ?, ?, ?, ?, ?)", 
+                   (sender_id, receiver_id, listing_id, message, datetime.now(), False))
     conn.commit()
     conn.close()
 
     flash('Message sent successfully', 'success')
     return redirect(url_for('profile'))
 
-# @app.route('/get_messages/<int:other_user_id>')
-# def get_messages(other_user_id):
-#     user_id = session.get('user_id')
 
-#     if not user_id:
-#         return redirect(url_for('login'))
-
-#     conn = sqlite3.connect('database.db')
-#     cursor = conn.cursor()
-#     cursor.execute("SELECT * FROM messages WHERE (sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?) ORDER BY timestamp ASC", (user_id, other_user_id, other_user_id, user_id))
-#     messages = cursor.fetchall()
-#     conn.close()
-
-#     return render_template('messages.html', messages=messages)  
 @app.route('/get_messages')
 def get_messages():
     user_id = session.get('user_id')
@@ -599,14 +587,14 @@ def get_messages():
     cursor = conn.cursor()
 
     # Replace 'id' and 'name' with your actual column names
-    cursor.execute("SELECT user_id, username FROM User WHERE user_id != ?", (user_id,))
+    cursor.execute("SELECT userID, firstName || ' ' || lastName AS username FROM User WHERE userID != ?", (user_id,))
     users = cursor.fetchall()
 
     messages = []
     other_user_id = request.args.get('other_user_id')
-    if other_user_id:
-        cursor.execute("SELECT * FROM messages WHERE (sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?) ORDER BY timestamp ASC", (user_id, other_user_id, other_user_id, user_id))
-        messages = cursor.fetchall()
+    cursor.execute("SELECT * FROM Message WHERE (senderID=? AND receiverID=?) OR (senderID=? AND receiverID=?) ORDER BY sendDate ASC", (user_id, other_user_id, other_user_id, user_id))
+    messages = cursor.fetchall()
+    print(messages)
 
     conn.close()
     return render_template('messages.html', users=users, messages=messages, other_user_id=other_user_id)

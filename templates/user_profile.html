@@ -6,7 +6,35 @@
     <!-- Display other user information -->
     <p>Email: {{ profile.email }}</p>
     <p>Location: {{ profile.location }}</p>
-    <!-- Add more fields as needed -->
+    <!-- User Listings -->
+    <h3 class="mt-5">Listings</h3>
+    <div class="listings-container d-flex flex-row flex-wrap justify-content-start">
+        {% if user_listings %}
+            {% for listing in user_listings %}
+                <div class="listing mb-3 p-3 border rounded">
+                    <h4>{{ listing.title }}</h4>
+                    <div class="listing-description">
+                        <p>{{ listing.description }}</p>
+                    </div>
+                    <!-- Display listing images -->
+                    <div class="listing-images">
+                        {% if listing.images %}
+                            {% for image in listing.images.split(',') %}
+                            <img src="{{ listing[4] }}" alt="{{ listing[2] }}" class="card-img-top" style="max-width: 200px; max-height: 200px;">
+                            {% endfor %}
+                        {% else %}
+                            <p>No images available.</p>
+                        {% endif %}
+                    </div>
+                    <div class="listing-date">
+                        <small class="text-muted">Posted on: {{ listing.datePosted }}</small>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No listings yet.</p>
+        {% endif %}
+    </div>
     <!-- User Reviews -->
     <h3 class="mt-5">Reviews</h3>
     <div class="reviews-container">
