@@ -27,8 +27,17 @@
                 {% for msg in messages %}
                 <div class="message">
                     <!-- Display message sender, receiver, and content -->
-                    <strong>From {{ msg[1] }}</strong> to <strong>{{ msg[2] }}</strong>: {{ msg[4] }}
-                    <div><small>{{ msg[5] }}</small></div> <!-- Display send date -->
+                    {% if msg['senderID'] == user_id %}
+                        <div class="sent-message">
+                            <strong>{{ msg[4] }}</strong>: {{ msg[2] }}
+                            <div><small>{{ msg[3] }}</small></div> <!-- Display send date -->
+                        </div>
+                    {% else %}
+                        <div class="received-message">
+                            <strong>{{ msg[5] }}</strong> to <strong>You</strong>: {{ msg[2] }}
+                            <div><small>{{ msg[3] }}</small></div> <!-- Display send date -->
+                        </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>

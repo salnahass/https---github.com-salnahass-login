@@ -169,25 +169,19 @@ def register():
             flash('All fields are required', 'error')
             return redirect(url_for('register'))
 
-        # Check if the file is one of the allowed types/extensions
-    #     if profile_image and allowed_file(profile_image.filename):
-    #         filename = secure_filename(profile_image.filename)
-    #         profile_image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    #         profile_image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    #     else:
-    #         flash('Invalid image format', 'error')
-    #         return redirect(url_for('register'))
-        
-
-    # conn = sqlite3.connect('database.db')
-    # cursor = conn.cursor()
+   # Validate and save the image if it exists
         if profile_image and allowed_file(profile_image.filename):
+            # Save the image file
             filename = secure_filename(profile_image.filename)
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             profile_image.save(image_path)
-            image_url = url_for('uploaded_file', filename=filename)
+            image_path = url_for('uploaded_file', filename=filename)
         else:
-            image_url = ''  # or a default image URL if you prefer
+            image_path = ''  # or a default image URL if you prefer
+
+
+    # conn = sqlite3.connect('database.db')
+    # cursor = conn.cursor()
 
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
@@ -197,12 +191,11 @@ def register():
     cursor.execute("SELECT * FROM User WHERE email=?", (email,))
     existing_user = cursor.fetchone()
     if existing_user:
-        flash('Email already registered', 'error')
         conn.close()
         return redirect(url_for('index'))
 
     # Insert the new user data into the User table
-    cursor.execute("INSERT INTO User (firstName, lastName, email, hashedPassword, profileImage, location, joinDate, lastLogin) VALUES (?, ?, ?, ?, ?, ?, date('now'), date('now'))", (firstName, lastName, email, password, image_url, location))
+    cursor.execute("INSERT INTO User (firstName, lastName, email, hashedPassword, profileImage, location, joinDate, lastLogin) VALUES (?, ?, ?, ?, ?, ?, date('now'), date('now'))", (firstName, lastName, email, password, image_path, location))
     conn.commit()
     
 
@@ -215,7 +208,6 @@ def register():
 
     conn.close()
 
-    flash('Registered successfully. You are now logged in.', 'success')
     return redirect(url_for('profile'))  # Redirect to profile or another desired page
 
 
@@ -280,13 +272,16 @@ def profile():
     last_name = user['lastName']
     email = user['email']
     location = user['location']
-    profile_image = user['profileImage'] if user['profileImage'] else 'uploads/defaultpfp.jpg'
+    profile_image = user['profileImage']
 
 # Fetch the reviews for the user
     cursor.execute("SELECT * FROM Review WHERE reviewedUserID=?", (user_id,))
     user_reviews = cursor.fetchall()
 
     return render_template('profile.html', first_name=first_name, last_name=last_name, email=email, location=location, profile_image=profile_image, user_listings=user_listings, user_reviews=user_reviews)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/edit-profile', methods=['GET', 'POST'])
 def edit_profile():
@@ -305,22 +300,24 @@ def edit_profile():
         location = request.form['location']
         profile_image = request.files['profile_image']
 
-        # Update user details in the database
-        cursor.execute("UPDATE User SET firstName=?, lastName=?, location=? WHERE userID=?", (first_name, last_name, location, user_id))
-
-        # Handle profile image upload
-        if profile_image:
-            # Ensure the directory exists
-            if not os.path.exists(UPLOAD_FOLDER):
-                os.makedirs(UPLOAD_FOLDER)
-
-            image_path = os.path.join(UPLOAD_FOLDER, profile_image.filename)
+        if profile_image and allowed_file(profile_image.filename):
+            # Save the image file
+            filename = secure_filename(profile_image.filename)
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             profile_image.save(image_path)
-            # Update the image path in the database
-            cursor.execute("UPDATE User SET profileImage=? WHERE userID=?", (image_path, user_id))
+            image_path = url_for('uploaded_file', filename=filename)
+        else:
+            # If no new image is uploaded, use the existing image path
+            cursor.execute("SELECT profileImage FROM User WHERE userID=?", (user_id,))
+            image_path = cursor.fetchone()[0]
 
+        # Update user details in the database
+        cursor.execute("UPDATE User SET firstName=?, lastName=?, location=?, profileImage=? WHERE userID=?", 
+                       (first_name, last_name, location, image_path, user_id))
         conn.commit()
         flash('Profile updated successfully', 'success')
+
+        conn.close()
         return redirect(url_for('profile'))
 
     # Fetch current user details to pre-fill the form
@@ -329,7 +326,6 @@ def edit_profile():
     conn.close()
 
     return render_template('edit_profile.html', user=user)
-
 @app.route('/submit_review')
 def submit_review_form():
     # Ensure the user is logged in
@@ -628,8 +624,8 @@ def send_message():
     conn.commit()
     conn.close()
 
-    flash('Message sent successfully', 'success')
-    return redirect(url_for('profile'))
+    other_user_id = session.get('other_user_id')
+    return redirect(url_for('get_messages', other_user_id=other_user_id))
 
 
 @app.route('/get_messages')
@@ -642,19 +638,28 @@ def get_messages():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
-    # Replace 'id' and 'name' with your actual column names
+    # Fetch users except the logged-in user
     cursor.execute("SELECT userID, firstName || ' ' || lastName AS username FROM User WHERE userID != ?", (user_id,))
     users = cursor.fetchall()
 
-    messages = []
     other_user_id = request.args.get('other_user_id')
-    cursor.execute("SELECT * FROM Message WHERE (senderID=? AND receiverID=?) OR (senderID=? AND receiverID=?) ORDER BY sendDate ASC", (user_id, other_user_id, other_user_id, user_id))
+
+    # Fetch messages along with sender and receiver names
+    cursor.execute("""
+        SELECT m.senderID, m.receiverID, m.content, m.sendDate,
+               s.firstName || ' ' || s.lastName AS senderName,
+               r.firstName || ' ' || r.lastName AS receiverName
+        FROM Message m
+        JOIN User s ON m.senderID = s.userID
+        JOIN User r ON m.receiverID = r.userID
+        WHERE (m.senderID = ? AND m.receiverID = ?) OR (m.senderID = ? AND m.receiverID = ?)
+        ORDER BY m.sendDate ASC
+    """, (user_id, other_user_id, other_user_id, user_id))
+
     messages = cursor.fetchall()
-    print(messages)
 
     conn.close()
     return render_template('messages.html', users=users, messages=messages, other_user_id=other_user_id)
-
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
