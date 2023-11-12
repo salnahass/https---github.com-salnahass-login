@@ -1,65 +1,78 @@
-<!-- user_profile.html -->
 {% extends 'layout.html' %}
 
 {% block content %}
-    <h1>{{ profile.firstName }} {{ profile.lastName }}</h1>
-    <!-- Display other user information -->
-    <p>Email: {{ profile.email }}</p>
-    <p>Location: {{ profile.location }}</p>
-    <!-- User Listings -->
-    <h3 class="mt-5">Listings</h3>
-    <div class="listings-container d-flex flex-row flex-wrap justify-content-start">
-        {% if user_listings %}
-            {% for listing in user_listings %}
-                <div class="listing mb-3 p-3 border rounded">
-                    <h4>{{ listing.title }}</h4>
-                    <div class="listing-description">
-                        <p>{{ listing.description }}</p>
-                    </div>
-                    <!-- Display listing images -->
-                    <div class="listing-images">
-                        {% if listing.images %}
-                            {% for image in listing.images.split(',') %}
-                            <img src="{{ listing[4] }}" alt="{{ listing[2] }}" class="card-img-top" style="max-width: 200px; max-height: 200px;">
-                            {% endfor %}
-                        {% else %}
-                            <p>No images available.</p>
-                        {% endif %}
-                    </div>
-                    <div class="listing-date">
-                        <small class="text-muted">Posted on: {{ listing.datePosted }}</small>
-                    </div>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p>No listings yet.</p>
-        {% endif %}
-    </div>
-    <!-- User Reviews -->
-    <h3 class="mt-5">Reviews</h3>
-    <div class="reviews-container">
-        {% if user_reviews %}
-            {% for review in user_reviews %}
-                <div class="review mb-3 p-3 border rounded">
-                    <div class="review-rating">
-                        {% for star in range(review.rating) %}
-                            <span class="fa fa-star checked"></span>
-                        {% endfor %}
-                        {% for star in range(5 - review.rating) %}
-                            <span class="fa fa-star"></span>
-                        {% endfor %}
-                    </div>
-                    <div class="review-text">
-                        <p>{{ review.comment }}</p>
-                    </div>
-                    <div class="review-date">
-                        <small class="text-muted">{{ review.datePosted }}</small>
-                    </div>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p>No reviews yet.</p>
-        {% endif %}
-    </div>
+<div class="container mt-5">
+    <div class="row">
+        <!-- User Info and Image -->
+        <div class="col-md-4 text-center">
+            <img src="{{ profile.profileImage }}" alt="Profile Image" class="img-fluid rounded-circle mb-3" style="width: 200px; height: 200px;">
+            <h2>{{ profile.firstName }} {{ profile.lastName }}</h2>
+            <p>Email: {{ profile.email }}</p>
+            <p>Location: {{ profile.location }}</p>
+        </div>
 
+        <!-- User Listings and Reviews -->
+        <div class="col-md-8">
+            <!-- User Listings -->
+            <h3 class="mb-4">Listings</h3>
+            <div class="listings-container" style="max-width: 200px; max-height: 200px;">
+                {% if user_listings %}
+                    {% for listing in user_listings %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h4 class="card-title">{{ listing.title }}</h4>
+                                <p class="card-text">{{ listing.description }}</p>
+                                <!-- Display listing images -->
+                                <div class="listing-images mt-2">
+                                    {% if listing.images %}
+                                        {% for image in listing.images.split(',') %}
+                                        <img src="{{ image }}" alt="Image" class="img-fluid" style="max-width: 100px; max-height: 100px;">
+                                        {% endfor %}
+                                    {% else %}
+                                        <p>No images available.</p>
+                                    {% endif %}
+                                </div>
+                                <div class="listing-date mt-2">
+                                    <small class="text-muted">Posted on: {{ listing.datePosted }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No listings yet.</p>
+                {% endif %}
+            </div>
+            <br>
+            <br>
+            <!-- User Reviews -->
+            <h3 class="mt-5 mb-4">Reviews</h3>
+            <div class="reviews-container">
+                {% if user_reviews %}
+                    {% for review in user_reviews %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="review-rating">
+                                    {% for star in range(review.rating) %}
+                                        <span class="fa fa-star checked"></span>
+                                    {% endfor %}
+                                    {% for star in range(5 - review.rating) %}
+                                        <span class="fa fa-star"></span>
+                                    {% endfor %}
+                                </div>
+                                <div class="review-text mt-2">
+                                    <p>{{ review.comment }}</p>
+                                </div>
+                                <div class="review-date mt-2">
+                                    <small class="text-muted">{{ review.datePosted }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No reviews yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

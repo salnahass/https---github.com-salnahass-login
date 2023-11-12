@@ -436,7 +436,7 @@ def user_profile(user_id):
     user = cursor.fetchone()
     # Close the database connection
     # conn.close()
-
+    print(user)
     # Check if the user was found
     if user is None:
         # User was not found, redirect or show an error

@@ -8,6 +8,31 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+        <style>
+            /* Existing Footer Styles */
+            footer {
+                background-color: #f8f9fa;
+                color: #495057;
+                padding: 20px 0;
+                border-top: 1px solid #e0e0e0;
+            }
+        
+            footer p {
+                margin-bottom: 0;
+            }
+        
+            /* New Styles for Footer Positioning */
+            html, body {
+                height: 100%; /* Set the height of html and body to 100% */
+                display: flex;
+                flex-direction: column; /* Stack elements vertically */
+            }
+        
+            .container {
+                flex: 1; /* Makes the container grow to occupy available space */
+            }
+        </style>
+        
     </head>
     
 <body>
@@ -30,7 +55,7 @@
 
                 </li>
                 <li class="nav-item">
-                    <a href="{{ url_for('listings') }}">Listing</a>                
+                    <a href="{{ url_for('listings') }}">Listings</a>                
                 </li>
                 <li class="nav-item">
                     <a href="{{ url_for('add_listing') }}">Add Listing</a>
@@ -59,5 +84,12 @@
             {% endblock %}
         </div>
     </div>
+ <!-- Footer -->
+     <!-- Footer -->
+     <footer class="text-center">
+        <div class="container">
+            <p>Exchange Hub all rights reserved</p>
+        </div>
+    </footer>
 </body>
 </html>
